@@ -1,0 +1,190 @@
+<app-dashboard-layout title="My Account" subtitle="View and manage your profile">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+    <div class="bg-white rounded-lg shadow p-4 sm:p-6">
+      <h2 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Profile Information</h2>
+      <div *ngIf="user?.role" class="mb-3 sm:mb-4">
+        <span class="inline-block px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold" 
+              [ngClass]="{
+                'bg-blue-100 text-blue-800': user?.role === 'admin',
+                'bg-green-100 text-green-800': user?.role === 'staff', 
+                'bg-gray-100 text-gray-800': user?.role === 'resident'
+              }">
+          {{ user?.role | titlecase }}
+        </span>
+      </div>
+      <form [formGroup]="profileForm" class="space-y-3 sm:space-y-4" (ngSubmit)="saveProfile()">
+        <div *ngIf="showValidationAlert" class="bg-red-50 border border-red-200 rounded-md p-3 sm:p-4 mb-3 sm:mb-4">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-4 w-4 sm:h-5 sm:w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-2 sm:ml-3">
+              <h3 class="text-xs sm:text-sm font-medium text-red-800">Please fix the following errors:</h3>
+              <div class="mt-1 sm:mt-2 text-xs sm:text-sm text-red-700">
+                <ul class="list-disc pl-4 sm:pl-5 space-y-1">
+                  <li *ngIf="profileForm.get('fullName')?.invalid">Full name is required and must be at least 2 characters</li>
+                  <li *ngIf="profileForm.get('phone')?.invalid">Mobile number is required</li>
+                  <li *ngIf="profileForm.get('sitio')?.invalid">Sitio/Purok is required</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <div>
+            <label class="block text-sm text-gray-700 mb-1">Full Name</label>
+            <input class="w-full border rounded px-3 py-2" 
+                   [class.border-red-500]="profileForm.get('fullName')?.invalid && profileForm.get('fullName')?.touched"
+                   formControlName="fullName" 
+                   (input)="onFormFieldChange()" />
+            <div *ngIf="profileForm.get('fullName')?.invalid && profileForm.get('fullName')?.touched" 
+                 class="text-red-500 text-sm mt-1">
+              <span *ngIf="profileForm.get('fullName')?.errors?.['required']">Full name is required</span>
+              <span *ngIf="profileForm.get('fullName')?.errors?.['minlength']">Full name must be at least 2 characters</span>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm text-gray-700 mb-1">Email</label>
+            <input class="w-full border rounded px-3 py-2 bg-gray-100" formControlName="email" readonly />
+          </div>
+          <div>
+            <label class="block text-sm text-gray-700 mb-1">Mobile Number</label>
+            <input class="w-full border rounded px-3 py-2" 
+                   [class.border-red-500]="profileForm.get('phone')?.invalid && profileForm.get('phone')?.touched"
+                   formControlName="phone" 
+                   (input)="onFormFieldChange()" />
+            <div *ngIf="profileForm.get('phone')?.invalid && profileForm.get('phone')?.touched" 
+                 class="text-red-500 text-sm mt-1">
+              <span *ngIf="profileForm.get('phone')?.errors?.['required']">Mobile number is required</span>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm text-gray-700 mb-1">Sitio/Purok</label>
+            <input class="w-full border rounded px-3 py-2" 
+                   [class.border-red-500]="profileForm.get('sitio')?.invalid && profileForm.get('sitio')?.touched"
+                   formControlName="sitio" 
+                   placeholder="Enter your sitio/purok" 
+                   (input)="onFormFieldChange()" />
+            <div *ngIf="profileForm.get('sitio')?.invalid && profileForm.get('sitio')?.touched" 
+                 class="text-red-500 text-sm mt-1">
+              <span *ngIf="profileForm.get('sitio')?.errors?.['required']">Sitio/Purok is required</span>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm text-gray-700 mb-1">Municipality</label>
+            <input class="w-full border rounded px-3 py-2 bg-gray-100" formControlName="municipality" readonly />
+          </div>
+          <div>
+            <label class="block text-sm text-gray-700 mb-1">Province</label>
+            <input class="w-full border rounded px-3 py-2 bg-gray-100" formControlName="province" readonly />
+          </div>
+        </div>
+        <div class="flex justify-end">
+          <button type="submit" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-3 sm:px-4 py-2 rounded text-sm sm:text-base transition-colors duration-200" [disabled]="profileForm.invalid || isSavingProfile" (click)="onButtonClick()">
+            {{ isSavingProfile ? 'Saving...' : 'Save Changes' }}
+          </button>
+        </div>
+        <div *ngIf="profileError" class="text-sm text-red-600">{{ profileError }}</div>
+      </form>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-4 sm:p-6">
+      <h2 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Change Password</h2>
+      <form [formGroup]="passwordForm" class="space-y-3 sm:space-y-4" (ngSubmit)="changePassword()">
+        <div>
+          <label class="block text-sm text-gray-700 mb-1">Current Password</label>
+          <input type="password" class="w-full border rounded px-3 py-2" formControlName="current_password" />
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <div>
+            <label class="block text-sm text-gray-700 mb-1">New Password</label>
+            <input type="password" class="w-full border rounded px-3 py-2" formControlName="new_password" />
+          </div>
+          <div>
+            <label class="block text-sm text-gray-700 mb-1">Confirm New Password</label>
+            <input type="password" class="w-full border rounded px-3 py-2" formControlName="confirm_new_password" />
+          </div>
+        </div>
+        <div class="flex justify-end">
+          <button type="submit" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-3 sm:px-4 py-2 rounded text-sm sm:text-base transition-colors duration-200">
+            {{ isChangingPassword ? 'Updating...' : 'Update Password' }}
+          </button>
+        </div>
+        <div *ngIf="passwordError" class="text-sm text-red-600">{{ passwordError }}</div>
+      </form>
+    </div>
+  </div>
+
+  <app-status-modal [isVisible]="profileSuccess" type="success" title="Profile Updated" message="Your profile has been updated successfully." [autoCloseDelay]="2000" (modalClosed)="onProfileSuccessClosed()"></app-status-modal>
+  <app-status-modal [isVisible]="permissionRequestSuccess" type="success" title="Permission Request Submitted" message="Your permission request has been submitted successfully. An administrator will review your request." [autoCloseDelay]="3000" (modalClosed)="onPermissionRequestSuccessClosed()"></app-status-modal>
+  <app-status-modal [isVisible]="passwordSuccess" type="success" title="Password Changed" message="Your password has been changed successfully." [autoCloseDelay]="2000" (modalClosed)="onPasswordSuccessClosed()"></app-status-modal>
+
+  <!-- Permission Warning Modal for Residents -->
+  <div
+    *ngIf="showPermissionWarningModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+  >
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="flex-shrink-0">
+          <svg
+            class="w-6 h-6 text-yellow-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900">
+          Permission Required
+        </h3>
+      </div>
+      
+      <div class="mb-4">
+        <p class="text-sm text-gray-700 mb-4">
+          As a resident, you need admin permission to update your profile. Please provide a reason for the changes you want to make.
+        </p>
+        
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Reason for Changes <span class="text-red-500">*</span>
+        </label>
+        <textarea
+          [(ngModel)]="permissionReason"
+          class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+          rows="4"
+          placeholder="Please explain why you need to update your profile information..."
+          [class.border-red-500]="!permissionReason || permissionReason.trim() === ''"
+        ></textarea>
+        <p class="text-xs text-gray-500 mt-1">
+          Your request will be reviewed by an administrator.
+        </p>
+      </div>
+
+      <div class="flex justify-end gap-3">
+        <button
+          type="button"
+          (click)="onPermissionWarningCancel()"
+          class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          (click)="onPermissionWarningConfirm()"
+          [disabled]="!permissionReason || permissionReason.trim() === ''"
+          class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Submit Request
+        </button>
+      </div>
+    </div>
+  </div>
+</app-dashboard-layout>
